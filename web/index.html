@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculator</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #1c1c1e;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+    }
+
+    .calculator {
+      width: 320px;
+      background: #1c1c1e;
+      border-radius: 48px;
+      padding: 20px;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+    }
+
+    .display {
+      text-align: right;
+      padding: 16px 12px 8px;
+      min-height: 120px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+
+    .expression {
+      color: #636366;
+      font-size: 18px;
+      min-height: 24px;
+      margin-bottom: 4px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .result {
+      color: #fff;
+      font-size: 72px;
+      font-weight: 300;
+      line-height: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      transition: font-size 0.1s;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    button {
+      height: 72px;
+      border: none;
+      border-radius: 50%;
+      font-size: 28px;
+      font-weight: 400;
+      cursor: pointer;
+      transition: opacity 0.1s, transform 0.08s;
+      outline: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button:active {
+      opacity: 0.7;
+      transform: scale(0.95);
+    }
+
+    .btn-gray   { background: #636366; color: #000; }
+    .btn-dark   { background: #3a3a3c; color: #fff; }
+    .btn-orange { background: #ff9f0a; color: #fff; }
+    .btn-orange.active { background: #fff; color: #ff9f0a; }
+
+    .btn-zero {
+      grid-column: span 2;
+      border-radius: 36px;
+      text-align: left;
+      padding-left: 26px;
+    }
+  </style>
+</head>
+<body>
+<div class="calculator">
+  <div class="display">
+    <div class="expression" id="expression"></div>
+    <div class="result" id="result">0</div>
+  </div>
+  <div class="buttons">
+    <button class="btn-gray"   onclick="calc('AC')">AC</button>
+    <button class="btn-gray"   onclick="calc('+/-')">+/-</button>
+    <button class="btn-gray"   onclick="calc('%')">%</button>
+    <button class="btn-orange" onclick="calc('÷')" id="op-÷">÷</button>
+
+    <button class="btn-dark"   onclick="calc('7')">7</button>
+    <button class="btn-dark"   onclick="calc('8')">8</button>
+    <button class="btn-dark"   onclick="calc('9')">9</button>
+    <button class="btn-orange" onclick="calc('×')" id="op-×">×</button>
+
+    <button class="btn-dark"   onclick="calc('4')">4</button>
+    <button class="btn-dark"   onclick="calc('5')">5</button>
+    <button class="btn-dark"   onclick="calc('6')">6</button>
+    <button class="btn-orange" onclick="calc('-')" id="op--">−</button>
+
+    <button class="btn-dark"   onclick="calc('1')">1</button>
+    <button class="btn-dark"   onclick="calc('2')">2</button>
+    <button class="btn-dark"   onclick="calc('3')">3</button>
+    <button class="btn-orange" onclick="calc('+')" id="op-+">+</button>
+
+    <button class="btn-dark btn-zero" onclick="calc('0')">0</button>
+    <button class="btn-dark"   onclick="calc('.')">.</button>
+    <button class="btn-orange" onclick="calc('=')">=</button>
+  </div>
+</div>
+
+<script>
+  let display = '0';
+  let operand1 = null;
+  let operator = null;
+  let waitNext = false;
+  let expression = '';
+
+  const resultEl = document.getElementById('result');
+  const exprEl   = document.getElementById('expression');
+
+  function setDisplay(val) {
+    display = String(val);
+    const len = display.length;
+    resultEl.style.fontSize = len > 9 ? '36px' : len > 6 ? '52px' : '72px';
+    resultEl.textContent = display;
+  }
+
+  function clearOps() {
+    ['÷','×','-','+'].forEach(op => {
+      const el = document.getElementById('op-' + op);
+      if (el) el.classList.remove('active');
+    });
+  }
+
+  function calc(btn) {
+    if (btn === 'AC') {
+      setDisplay('0');
+      operand1 = null; operator = null; waitNext = false; expression = '';
+      exprEl.textContent = '';
+      clearOps();
+      return;
+    }
+
+    if (btn === '+/-') {
+      if (display !== '0' && display !== 'Error') {
+        setDisplay(display.startsWith('-') ? display.slice(1) : '-' + display);
+      }
+      return;
+    }
+
+    if (btn === '%') {
+      const v = parseFloat(display);
+      if (!isNaN(v)) setDisplay(fmtNum(v / 100));
+      return;
+    }
+
+    if (btn === '.') {
+      if (waitNext) { setDisplay('0.'); waitNext = false; return; }
+      if (!display.includes('.')) setDisplay(display + '.');
+      return;
+    }
+
+    const isOp = ['÷','×','-','+'].includes(btn);
+
+    if (isOp) {
+      clearOps();
+      const el = document.getElementById('op-' + btn);
+      if (el) el.classList.add('active');
+      if (operator && !waitNext) {
+        const res = compute(operand1, parseFloat(display), operator);
+        setDisplay(fmtNum(res));
+        operand1 = res;
+      } else {
+        operand1 = parseFloat(display);
+      }
+      operator = btn;
+      expression = fmtNum(operand1) + ' ' + btn;
+      exprEl.textContent = expression;
+      waitNext = true;
+      return;
+    }
+
+    if (btn === '=') {
+      if (operator === null) return;
+      const op2 = parseFloat(display);
+      const res = compute(operand1, op2, operator);
+      exprEl.textContent = fmtNum(operand1) + ' ' + operator + ' ' + fmtNum(op2) + ' =';
+      clearOps();
+      setDisplay(isNaN(res) ? 'Error' : fmtNum(res));
+      operand1 = null; operator = null; waitNext = false;
+      return;
+    }
+
+    // digit
+    clearOps();
+    if (operator) {
+      const el = document.getElementById('op-' + operator);
+      if (el) el.classList.add('active');
+    }
+    if (waitNext) {
+      setDisplay(btn);
+      waitNext = false;
+    } else {
+      setDisplay(display === '0' ? btn : display + btn);
+    }
+  }
+
+  function compute(a, b, op) {
+    switch (op) {
+      case '+': return a + b;
+      case '-': return a - b;
+      case '×': return a * b;
+      case '÷': return b !== 0 ? a / b : NaN;
+    }
+  }
+
+  function fmtNum(n) {
+    if (isNaN(n)) return 'Error';
+    const s = parseFloat(n.toPrecision(10));
+    return String(s);
+  }
+
+  // Keyboard support
+  document.addEventListener('keydown', e => {
+    const map = {
+      '0':'0','1':'1','2':'2','3':'3','4':'4',
+      '5':'5','6':'6','7':'7','8':'8','9':'9',
+      '.':'.', 'Enter':'=', '=':'=',
+      '+':'+', '-':'-', '*':'×', '/':'÷',
+      'Escape':'AC', 'Backspace':'AC', '%':'%'
+    };
+    if (map[e.key]) { e.preventDefault(); calc(map[e.key]); }
+  });
+</script>
+</body>
+</html>
