@@ -1,0 +1,27 @@
+image: ghcr.io/cirruslabs/flutter:stable
+
+stages:
+  - test
+  - build
+
+variables:
+  ANDROID_COMPILE_SDK: "34"
+
+test:
+  stage: test
+  script:
+    - flutter pub get
+    - flutter test
+
+build_apk:
+  stage: build
+  script:
+    - flutter pub get
+    - flutter build apk --release
+  artifacts:
+    paths:
+      - build/app/outputs/flutter-apk/app-release.apk
+    expire_in: 1 week
+  only:
+    - main
+    - master
