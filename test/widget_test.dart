@@ -5,14 +5,16 @@ import 'package:calculator/main.dart';
 void main() {
   testWidgets('Calculator shows 0 on start', (WidgetTester tester) async {
     await tester.pumpWidget(const CalculatorApp());
-    expect(find.text('0'), findsOneWidget);
+    // '0' appears in the display and as the '0' button
+    expect(find.text('0'), findsNWidgets(2));
   });
 
   testWidgets('Tap digit updates display', (WidgetTester tester) async {
     await tester.pumpWidget(const CalculatorApp());
     await tester.tap(find.text('5'));
     await tester.pump();
-    expect(find.text('5'), findsOneWidget);
+    // '5' appears in the display and as the '5' button
+    expect(find.text('5'), findsNWidgets(2));
   });
 
   testWidgets('Addition works', (WidgetTester tester) async {
@@ -25,7 +27,8 @@ void main() {
     await tester.pump();
     await tester.tap(find.text('='));
     await tester.pump();
-    expect(find.text('7'), findsOneWidget);
+    // '7' appears in the display and as the '7' button
+    expect(find.text('7'), findsNWidgets(2));
   });
 
   testWidgets('Division by zero shows Error', (WidgetTester tester) async {
