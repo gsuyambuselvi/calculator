@@ -1,31 +1,29 @@
 plugins {
-    id 'com.android.application'
-    id 'kotlin-android'
+    id "com.android.application"
+    id "kotlin-android"
+    id "dev.flutter.flutter-gradle-plugin"
 }
 
 android {
-    namespace 'com.example.calculator'
+    namespace "com.example.calculator"
     compileSdk 34
 
-    sourceSets {
-        main.java.srcDirs += 'src/main/kotlin'
-    }
-
     defaultConfig {
-        applicationId 'com.example.calculator'
+        applicationId "com.example.calculator"
         minSdk 21
         targetSdk 34
         versionCode 1
-        versionName '1.0.0'
+        versionName "1.0.0"
     }
 
     buildTypes {
         release {
             minifyEnabled false
+            signingConfig signingConfigs.debug
         }
     }
 }
 
-dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+flutter {
+    source "../.."
 }
