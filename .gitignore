@@ -12,6 +12,7 @@ pubspec.lock
 android/local.properties
 android/.gradle/
 android/app/google-services.json
+android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
 
 # iOS
 ios/Flutter/Generated.xcconfig
